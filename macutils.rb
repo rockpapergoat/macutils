@@ -19,6 +19,7 @@ class Macutils
     @user = Etc.getlogin.chomp
   end
   
+  # expects: string, user name, populated by get_ methods
   # returns: string
   def get_full_name(user)
     Etc.getpwnam("#{user}")["gecos"].chomp
@@ -26,6 +27,7 @@ class Macutils
     #%x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")
   end
   
+  # expects: string, user name, possibly populated by methods above
   # returns: string
   def get_homedir(user)
     Etc.getpwnam("#{user}")["dir"].chomp
@@ -58,6 +60,7 @@ class Macutils
       @list = %x(/usr/sbin/networksetup -listallnetworkservices).split("\n").drop(1)
   end
   
+  # expects: array, populated by get_interfaces method
   # returns: string
   # for now, just outputs what it would do.
   # will return maybe nothing unless error.
@@ -79,6 +82,7 @@ class Macutils
   
   # pkg tools
   
+  # expects: list or array
   # returns: feedback the apps are uninstalled
   def uninstall_app(*args)
     # remove files based on pkg info (boms)
@@ -117,11 +121,11 @@ class Macutils
     end
   end
   
+  # expects: string, name of receipt file, ex: com.apple.blob
   # returns: nothing
   # adds file to jamf specific dummy receipts folder
   def create_dummy_receipt(receipt)
-    crumb = File.new("/Library/Application\ Support/JAMF/Receipts/#{receipt}", "w")
-    crumb.close
+    File.new("/Library/Application\ Support/JAMF/Receipts/#{receipt}", "w") {}
   end
   
   # misc. tools
@@ -166,8 +170,18 @@ class Macutils
     else
       puts "Coverage end:\t\tEXPIRED\n"
     end
-    
   end
+  
+  # returns: nothing
+  def add_applesetupdone
+    File.open("/private/var/db/.AppleSetupDone", "w") {}
+  end
+  
+  # returns: nothing
+  def add_setupregcomplete
+    File.open("/Library/Receipts/.SetupRegComplete", "w") {}
+  end
+
 
 end
 
