@@ -45,7 +45,7 @@ class Macutils
       pair.split(" ").collect! { user_hash[pair.split(" ")[0]] = pair.split(" ")[1].to_i}
     end
     user_hash.delete_if {|k,v| v.to_i < 500 }
-    # can also do it like this, but it reports all directory entries
+    # can also do it like this, but it reports all directory entries, not just local
     # Etc.passwd { |d| user_hash[d.name] = d.uid if d.uid > 500 }
   end
   
@@ -53,7 +53,7 @@ class Macutils
   
   # networking
   
-  # returns: array
+  # returns: array of interface names
   def get_interfaces
       @list = %x(/usr/sbin/networksetup -listallnetworkservices).split("\n").drop(1)
   end
@@ -74,13 +74,23 @@ class Macutils
   # process tools
   def kill_process(process)
     # attempt to kill by name
-  end
-  
-  def uninstall_app(*args)
-    # 
+    # should probably do this using proctable or other built-in
   end
   
   # pkg tools
+  
+  # returns: feedback the apps are uninstalled
+  def uninstall_app(*args)
+    # remove files based on pkg info (boms)
+    # or
+    # just remove the app directory
+    # check munki for tips on how to do this cleanly.
+    # i'm inclined to skip this for now.
+  end
+  
+  # expects: list or array of pkgids as args, ex: com.apple.iLife
+  # returns: string
+  # should return notification and pkgids removed
   def forget_pkgs(*args)
     args.each do |receipt|
       known_pkgs = %x(pkgutil --pkgs).split
@@ -93,6 +103,8 @@ class Macutils
     end
   end
   
+  # expects: list or array of file paths
+  # returns: string, confirmation of deletion
   def remove_paths(*args)
     args.each do |item|
       if File.directory?(item)
@@ -114,6 +126,7 @@ class Macutils
   
   # misc. tools
   
+  # expects: strings (file name or source path, destination path)
   # returns: string
   # notifies of copying file or files to spot under user's homedir.
   # assumes passing full path to the file to be copied.
@@ -133,11 +146,12 @@ class Macutils
     %x(system_profiler SPHardwareDataType | awk '/Serial/ {print $4}').upcase.chomp
   end
   
+  # expects: serial number (can use get_serial to populate) and quoted proxy url (if any; see below)
   # returns: string
   # more like a bunch of text
   # cf. this is based on gary larizza's script:
   # https://github.com/glarizza/scripts/blob/master/ruby/warranty.rb
-  def get_warranty(serial, proxy = "")
+  def get_warranty(serial = "", proxy = "")
     serial = serial.upcase
     warranty_data = {}
     raw_data = open('https://selfsolve.apple.com/warrantyChecker.do?sn=' + serial.upcase + '&country=USA', :proxy => "#{proxy}")
