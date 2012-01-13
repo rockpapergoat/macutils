@@ -6,6 +6,9 @@
 require 'rubygems'
 require "FileUtils"
 require 'pathname'
+require 'open-uri'
+require 'openssl'
+require 'json'
 
 class Macutils
   
@@ -102,6 +105,8 @@ class Macutils
     end
   end
   
+  # returns: nothing
+  # adds file to jamf specific dummy receipts folder
   def create_dummy_receipt(receipt)
     crumb = File.new("/Library/Application\ Support/JAMF/Receipts/#{receipt}", "w")
     crumb.close
@@ -122,19 +127,55 @@ class Macutils
           FileUtils.chown_R("#{u}", nil, "/Users/#{u}/#{path}/#{File.basename(file)}")
       end
   end
+  
+  # returns: string
+  def get_serial
+    %x(system_profiler SPHardwareDataType | awk '/Serial/ {print $4}').upcase.chomp
+  end
+  
+  # returns: string
+  # more like a bunch of text
+  # cf. this is based on gary larizza's script:
+  # https://github.com/glarizza/scripts/blob/master/ruby/warranty.rb
+  def get_warranty(serial, proxy = "")
+    serial = serial.upcase
+    warranty_data = {}
+    raw_data = open('https://selfsolve.apple.com/warrantyChecker.do?sn=' + serial.upcase + '&country=USA', :proxy => "#{proxy}")
+    warranty_data = JSON.parse(raw_data.string[5..-2])
+
+    puts "\nSerial Number:\t\t#{warranty_data['SERIAL_ID']}\n"
+    puts "Product Decription:\t#{warranty_data['PROD_DESCR']}\n"
+    puts "Purchase date:\t\t#{warranty_data['PURCHASE_DATE'].gsub("-",".")}"
+
+    unless warranty_data['COV_END_DATE'].empty?
+      puts "Coverage end:\t\t#{warranty_data['COV_END_DATE'].gsub("-",".")}\n"
+    else
+      puts "Coverage end:\t\tEXPIRED\n"
+    end
+    
+  end
 
 end
+
+# EXAMPLES
 
 # to use, instantiate a class object, then call the methods
 a = Macutils.new
 
 # set proxy for all interfaces
 # a.set_proxyurl(a.get_interfaces)
+
 # remove paths passed as args
 # a.remove_paths("/tmp/1", "/tmp/2")
+
 # forget pkgs from the receipts db
 # a.forget_pkgs("edu.mit.ll.ilife11", "com.done.cow")
+
 # create a dummy receipt under jamf receipts
 # a.create_dummy_receipt("Google Chrome.pkg")
+
 # copy files to a user's homedir
-#a.stash_user_file("/tmp/blorp","Library/Preferences")
+# a.stash_user_file("/tmp/blorp","Library/Preferences")
+
+# get the current machine's warranty coverage
+# a.get_warranty(a.get_serial, "http://1.1.1.1:8080")
