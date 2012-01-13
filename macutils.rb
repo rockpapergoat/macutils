@@ -136,3 +136,5 @@ a = Macutils.new
 # a.forget_pkgs("edu.mit.ll.ilife11", "com.done.cow")
 # create a dummy receipt under jamf receipts
 # a.create_dummy_receipt("Google Chrome.pkg")
+# copy files to a user's homedir
+#a.stash_user_file("/tmp/blorp","Library/Preferences")
