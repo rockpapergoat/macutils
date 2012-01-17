@@ -21,26 +21,38 @@ class Macutils
   
   # returns: string
   def get_current_user
-    @user = Etc.getlogin.chomp
-    # Etc method may just report the users currently running the process.
+    #@user = Etc.getlogin.chomp
+    # Etc method may just report the user currently running the process.
     # test this.
-    # %x(ls -l /dev/console | awk '{ print $3 }')
+    @user = %x(ls -l /dev/console | awk '{ print $3 }')
+    if @user == "root" || nil
+      @user = nil
+    else
+      @user.chomp
+    end
   end
   
   # expects: string, user name, populated by get_ methods
   # returns: string
   def get_full_name(user)
-    Etc.getpwnam("#{user}")["gecos"].chomp
-    # or with dscl
-    # %x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")
+    begin
+      Etc.getpwnam("#{user}")["gecos"].chomp
+      # or with dscl
+      # %x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")      
+    rescue Exception => e
+    end
+    
   end
   
   # expects: string, user name, possibly populated by methods above
   # returns: string
   def get_homedir(user)
-    Etc.getpwnam("#{user}")["dir"].chomp
-    # or with dscl
-    #homedir = %x(dscl . -read /users/#{user} NFSHomeDirectory).gsub(/NFSHomeDirectory: /,"")
+    begin
+      Etc.getpwnam("#{user}")["dir"].chomp
+      # or with dscl
+      #homedir = %x(dscl . -read /users/#{user} NFSHomeDirectory).gsub(/NFSHomeDirectory: /,"")
+    rescue Exception => e
+    end    
   end
   
   # returns: array
@@ -148,8 +160,8 @@ class Macutils
       users = get_all_over500_users
       users.each_key do |u|
           puts "copying files to #{u}\'s home at #{path}."
-          system "ditto -V #{file} /Users/#{u}/#{path}/#{File.basename(file)}"
-          FileUtils.chown_R("#{u}", nil, "/Users/#{u}/#{path}/#{File.basename(file)}")
+          system "ditto -V #{file} #{get_homedir(u)}/#{path}/#{File.basename(file)}"
+          FileUtils.chown_R("#{u}", nil, "#{get_homedir(u)}/#{path}/#{File.basename(file)}")
       end
   end
   
@@ -196,7 +208,7 @@ end
 # EXAMPLES
 
 # to use, instantiate a class object, then call the methods
-a = Macutils.new
+# a = Macutils.new
 
 # set proxy for all interfaces
 # a.set_proxyurl(a.get_interfaces)
