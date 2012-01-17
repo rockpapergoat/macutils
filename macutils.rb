@@ -12,11 +12,19 @@ require 'json'
 
 class Macutils
   
+  def initialize
+    
+    
+  end
+  
   # user and group tools
   
   # returns: string
   def get_current_user
     @user = Etc.getlogin.chomp
+    # Etc method may just report the users currently running the process.
+    # test this.
+    # %x(ls -l /dev/console | awk '{ print $3 }')
   end
   
   # expects: string, user name, populated by get_ methods
@@ -24,7 +32,7 @@ class Macutils
   def get_full_name(user)
     Etc.getpwnam("#{user}")["gecos"].chomp
     # or with dscl
-    #%x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")
+    # %x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")
   end
   
   # expects: string, user name, possibly populated by methods above
