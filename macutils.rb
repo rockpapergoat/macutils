@@ -38,7 +38,7 @@ class Macutils
     begin
       Etc.getpwnam("#{user}")["gecos"].chomp
       # or with dscl
-      # %x(dscl . -read /users/#{user} original_realname).split.drop(1).join(" ")      
+      # %x(dscl /Search -read /Users/#{user} dsAttrTypeNative:cn).split.drop(1).join(" ")      
     rescue Exception => e
     end
     
