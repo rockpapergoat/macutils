@@ -4,7 +4,7 @@
 # description: utility functions for mac administration
 
 require 'rubygems'
-require "FileUtils"
+require 'FileUtils'
 require 'pathname'
 require 'open-uri'
 require 'openssl'
@@ -163,6 +163,15 @@ class Macutils
           system "ditto -V #{file} #{get_homedir(u)}/#{path}/#{File.basename(file)}"
           FileUtils.chown_R("#{u}", nil, "#{get_homedir(u)}/#{path}/#{File.basename(file)}")
       end
+  end
+  
+  # expects: strings for source and target paths
+  # returns: nothing on success, fails otherwise
+  def set_symlink(source,target)
+    fail "Original path doesn't exist or isn't a directory." unless File.directory?(source)
+    fail "Target already exists." unless File.directory?(target) == false
+    puts "creating a symlink from #{source} => #{target}."
+    FileUtils.ln_s(source,target,:verbose => true)
   end
   
   # returns: string
