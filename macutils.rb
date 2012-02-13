@@ -12,10 +12,6 @@ require 'json'
 
 class Macutils
   
-  def initialize
-    
-    
-  end
   
   # user and group tools
   
@@ -201,6 +197,23 @@ class Macutils
     end
   end
   
+  # input: string (path) or array of strings
+  # returns: string (version number, float in string form)
+  # ex. get_version("/Applications/Firefox.app")
+  # formatted for jss submission right now; remove results tags
+  def self.get_version(apps)
+      apps.each do |app|
+          if File.exists?("#{app}/Contents/Info.plist")
+              short = app.sub(/\/Applications\//, '')
+              vers = `/usr/bin/defaults read "#{app}"/Contents/Info CFBundleShortVersionString`.chomp
+              res = puts "<result>#{vers}</result>"
+              $?.success? ? res : "<result>ERROR: could not get version</result>"
+          else
+              puts "<result>#{app} is not installed.</result>"
+          end
+      end
+  end
+
   # returns: nothing
   def add_applesetupdone
     File.open("/private/var/db/.AppleSetupDone", "w") {}
